@@ -1,9 +1,5 @@
-//import 'package:firebase_ml_model_downloader/firebase_ml_model_downloader.dart';
 import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
-//import 'package:firebase_core/firebase_core.dart';
-//import 'firebase_options.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -13,9 +9,6 @@ import 'package:image_gallery_saver/image_gallery_saver.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // await Firebase.initializeApp(
-  //   options: DefaultFirebaseOptions.currentPlatform,
-  // );
 
   runApp(HomePage());
 }
@@ -40,27 +33,9 @@ class _HomePageState extends State<HomePage> {
     loadModelFiles();
   }
 
-  // void downloadModel() {
-  //   FirebaseModelDownloader.instance
-  //       .getModel(
-  //           'mobilenetv2_classification',
-  //           FirebaseModelDownloadType.localModel,
-  //           FirebaseModelDownloadConditions(
-  //             iosAllowsCellularAccess: true,
-  //             iosAllowsBackgroundDownloading: false,
-  //             androidChargingRequired: false,
-  //             androidWifiRequired: false,
-  //             androidDeviceIdleRequired: false,
-  //           ))
-  //       .then((customModel) {
-  //     final localModelPath = customModel.file;
-  //     print('Model downloaded! ${localModelPath as String}');
-  //   });
-  // }
-
   Future<void> loadModelFiles() async {
     String? res = await Tflite.loadModel(
-        model: "assets/mobilenetv2_model.tflite",
+        model: "assets/mobilenetv2_model_tutorial.tflite",
         labels: "assets/labels.txt",
         numThreads: 1, // defaults to 1
         isAsset:
@@ -71,10 +46,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> doImageClassification() async {
-
     var recognitions = await Tflite.runModelOnImage(
         path: _image.path, // required
-        imageMean: 127.5, // defaults to 117.0
+        imageMean: 117, // defaults to 117.0
         imageStd: 1, // defaults to 1.0
         numResults: 5, // defaults to 5
         threshold: 0.2, // defaults to 0.1
@@ -86,14 +60,11 @@ class _HomePageState extends State<HomePage> {
     _writeData();
 
     if (recognitions != null) {
-      recognitions.forEach((element) {
-        result = element['label'];
-      });
+      result = recognitions.first['label'];
       setState(() {
         result;
       });
     }
-
   }
 
   Future<void> choseImageFromGallery() async {
@@ -101,7 +72,6 @@ class _HomePageState extends State<HomePage> {
         await imagePicker.pickImage(source: ImageSource.gallery) as XFile;
     setState(() {
       _image = File(pickedFile.path);
-      saveImage();
       doImageClassification();
     });
   }
@@ -111,39 +81,8 @@ class _HomePageState extends State<HomePage> {
         await imagePicker.pickImage(source: ImageSource.camera) as XFile;
     setState(() {
       _image = File(pickedFile.path);
-      saveImage();
       doImageClassification();
     });
-  }
-
-  Future<void> saveImage() async {
-
-    // var status = await Permission.storage.status;
-    // while (status.isDenied) {
-    //   // You can request multiple permissions at once.
-    //   Map<Permission, PermissionStatus> statuses = await [
-    //     Permission.storage,
-    //     Permission.camera,
-    //   ].request();
-    //   print(statuses[Permission.storage]); // it should print PermissionStatus.granted
-    // }
-    //
-    // Uint8List bytes = await _image.readAsBytes();
-    // var result = await ImageGallerySaver.saveImage(
-    //     bytes,
-    //     quality: 100,
-    //     name: _image.path.split('/').last
-    // );
-    //
-    // if(result["isSuccess"] == true){
-    //   print("Image saved successfully.");
-    //
-    //   setState(() {
-    //
-    //   });
-    // }else{
-    //   print(result["errorMessage"]);
-    // }
   }
 
   // Writing to text
@@ -166,29 +105,46 @@ class _HomePageState extends State<HomePage> {
     print('Saved to ${_dirPath}');
   }
 
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: new ThemeData(scaffoldBackgroundColor: Colors.black),
       home: Scaffold(
           appBar: AppBar(
-            title: Text('Showcasing TF Lite models'),
+            title: Text('Showcasing TF Lite model'),
+            backgroundColor: Colors.black,
+            foregroundColor: Colors.deepPurpleAccent,
+            bottom: PreferredSize(
+                child: Container(
+                  color: Colors.deepPurpleAccent,
+                  height: 4.0,
+                ),
+                preferredSize: Size.fromHeight(4.0)),
           ),
           body: Center(
             child: Column(
               children: [
                 _image.path != 'NoPath'
-                    ? Image.file(_image, width: 224, height: 224,)
+                    ? Image.file(
+                        _image,
+                        width: 224,
+                        height: 224,
+                      )
                     : Icon(
                         Icons.image,
                         size: 100,
+                        color: Colors.deepPurpleAccent,
                       ),
                 ElevatedButton(
                   onPressed: choseImageFromGallery,
                   onLongPress: captureImage,
-                  child: Text('Chose or capture image'),
+                  style: ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.deepPurpleAccent)),
+                  child: Text(
+                    'Chose or capture image',
+                    style: TextStyle(color: Colors.black),
+                  ),
                 ),
-                Text(result),
+                Text(result, style: TextStyle(color: Colors.deepPurpleAccent),),
               ],
             ),
           )),
