@@ -34,7 +34,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> loadModelFiles() async {
     String? res = await Tflite.loadModel(
-        model: "assets/mobilenetv2_model_tutorial.tflite",
+        model: "assets/mobilenetv2_model_tutorial_v2.tflite",
         labels: "assets/labels.txt",
         numThreads: 1, // defaults to 1
         isAsset:
